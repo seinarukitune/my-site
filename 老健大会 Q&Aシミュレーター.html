@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老健大会 Q&Aシミュレーター</title>
+    
+    <!-- Google Fonts: Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (Styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            -webkit-font-smoothing: antialiased;
+            color: #334155; /* slate-700 */
+        }
+        
+        /* アコーディオンのアニメーション設定 */
+        .accordion-content {
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 1000px; /* 十分な高さ */
+            opacity: 1;
+        }
+        
+        /* アイコン回転アニメーション */
+        .chevron-icon {
+            transition: transform 0.3s ease;
+        }
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        /* ハイライト装飾 */
+        .highlight-rose { background-color: #ffe4e6; color: #881337; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+        .highlight-sky { background-color: #e0f2fe; color: #0c4a6e; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+        .highlight-orange { background-color: #ffedd5; color: #9a3412; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+        .highlight-purple { background-color: #f3e8ff; color: #581c87; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+        .highlight-emerald { background-color: #d1fae5; color: #064e3b; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+
+        /* スクロールバー非表示（ナビゲーション用） */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* タップ時のハイライト色調整 (iOS) */
+        * { -webkit-tap-highlight-color: rgba(79, 70, 229, 0.1); }
+    </style>
+</head>
+<body class="pb-20 overflow-x-hidden">
+
+    <!-- ヘッダー -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-20 border-b border-slate-200">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-indigo-600 to-violet-600 text-white p-2 rounded-lg shadow-md shrink-0 flex items-center justify-center">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-lg md:text-xl font-bold text-slate-800 tracking-tight leading-none truncate">
+                        老健大会 Q&A
+                    </h1>
+                    <p class="text-xs text-slate-500 font-medium">質疑応答シミュレーター</p>
+                </div>
+            </div>
+            <span class="shrink-0 text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 tracking-wide uppercase">
+                Final Ver.
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-8 w-full">
+        
+        <!-- イントロダクションバナー -->
+        <div class="bg-gradient-to-r from-indigo-600 to-violet-700 rounded-3xl shadow-xl p-6 md:p-8 mb-12 text-white relative overflow-hidden">
+            <!-- 背景装飾 -->
+            <div class="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none"></div>
+            
+            <div class="relative z-10">
+                <h2 class="text-xl md:text-3xl font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="text-green-400 w-8 h-8"></i>
+                    必勝の回答ポイント
+                </h2>
+                <p class="text-indigo-100 leading-relaxed text-base md:text-lg mb-4">
+                    審査員はあなたの研究の<strong class="text-white bg-white/20 px-2 rounded mx-1 whitespace-nowrap">「弱点」</strong>を突いてきます。
+                    しかし、それは逆に<strong class="text-white bg-white/20 px-2 rounded mx-1 whitespace-nowrap">「DXの必要性」</strong>を主張する最大のチャンスです。
+                </p>
+                <div class="flex flex-wrap gap-2 text-sm font-medium">
+                    <span class="bg-indigo-800/50 px-3 py-1 rounded-full border border-indigo-500/50 whitespace-nowrap">#ピンチをチャンスに</span>
+                    <span class="bg-indigo-800/50 px-3 py-1 rounded-full border border-indigo-500/50 whitespace-nowrap">#堂々と回答</span>
+                    <span class="bg-indigo-800/50 px-3 py-1 rounded-full border border-indigo-500/50 whitespace-nowrap">#笑顔で対応</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ナビゲーション（カテゴリージャンプ） -->
+        <div class="flex gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar snap-x touch-pan-x" id="nav-container">
+            <!-- JSで生成 -->
+        </div>
+
+        <!-- Q&A コンテンツエリア -->
+        <div id="qa-container">
+            <!-- JSでここにコンテンツを生成 -->
+        </div>
+
+        <!-- アドバイスセクション -->
+        <div class="relative overflow-hidden bg-slate-800 rounded-3xl p-8 text-white shadow-xl mb-16 border border-slate-700">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="p-2 bg-yellow-400/20 rounded-lg">
+                        <i data-lucide="sparkles" class="text-yellow-300 w-7 h-7"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold tracking-tight">発表当日のアドバイス</h2>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-slate-700/50 backdrop-blur-md rounded-2xl p-6 border border-slate-600 shadow-lg">
+                        <h3 class="font-bold text-xl mb-3 text-yellow-300 flex items-center gap-3">
+                            <span class="text-3xl">😊</span> 
+                            <span>笑顔のスイッチ</span>
+                        </h3>
+                        <p class="text-slate-200 leading-relaxed">
+                            弱点を突かれた時こそ、<span class="text-white font-bold bg-yellow-500/20 px-1 rounded">「そうなんです！そこが壁なんです！」</span>と明るく肯定しましょう。「研究の限界」を発見の一部として語る姿勢が、ポジティブな評価に繋がります。
+                        </p>
+                    </div>
+                    
+                    <div class="bg-slate-700/50 backdrop-blur-md rounded-2xl p-6 border border-slate-600 shadow-lg">
+                        <h3 class="font-bold text-xl mb-3 text-sky-300 flex items-center gap-3">
+                            <div class="p-1.5 bg-sky-500/20 rounded-lg flex items-center justify-center"><i data-lucide="users" class="w-5 h-5"></i></div>
+                            <span>チーム連携</span>
+                        </h3>
+                        <p class="text-slate-200 leading-relaxed">
+                            答えに詰まったら、<span class="text-white font-bold bg-sky-500/20 px-1 rounded">「その点は現場担当の〇〇から」</span>とパスを出しましょう。無理に一人で答えるより、チーム全体の取り組みとしてアピールできます。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- フッター -->
+        <div class="text-center text-slate-400 text-sm mt-12 mb-8 pb-8">
+            <p class="font-medium">Good Luck!</p>
+            <p class="mt-2 text-xs opacity-60">Generated for Simulation</p>
+        </div>
+
+    </main>
+
+    <!-- JavaScript ロジック -->
+    <script>
+        // --- データ定義 ---
+        const qaCategories = [
+            {
+                id: 'research',
+                title: '1. 研究デザイン・結果',
+                subtitle: '統計的な弱点・結果の解釈',
+                description: '最も厳しい「突っ込み」ゾーン。弱点を認めつつ、DXの必要性へ転換します。',
+                theme: 'rose', 
+                icon: 'shield-alert',
+                questions: [
+                    {
+                        q: 'Q1. 「N=5、期間1ヶ月」で効果なしというのは、研究として時期尚早ではありませんか？',
+                        intent: '統計的な弱点を指摘する質問。',
+                        answer: `ご指摘の通り、臨床的なエビデンスとしてはN数・期間ともに不十分であり、あくまで初期段階の検証です。<br>
+しかし、本研究の最大の成果は、数値の変化以上に、<strong class="highlight-rose">『良質な機器であっても、今の業務体制のまま導入すれば現場が崩壊する』という事実を定量化できたこと</strong>にあります。<br>
+数値効果が出る前の段階で『運用の壁』にぶつかったという事実こそが、次のステップであるDX化への強力な根拠になると考えております。`
+                    },
+                    {
+                        q: 'Q2. 「全自動」なのに「負担が増えた」という矛盾が気になります。なぜですか？',
+                        intent: '機器のスペックと現場の実感の乖離についての確認。',
+                        answer: `はい、そこが私たちにとっても最大の発見でした。<br>
+確かに施術自体は自動ですが、『準備・装着・事後の洗浄・消毒・充電管理』という付帯業務が新たに発生しました。<br>
+既存の業務フローの中に、単に新しい引き算（自動化）を入れるのではなく、<strong class="highlight-rose">付帯業務を含めたトータルの時間を捻出しない限り、テクノロジーは定着しない</strong>ということを痛感いたしました。`
+                    },
+                    {
+                        q: 'Q3. タイトルは「口腔ケア向上」ですが、結論は「DXが必要」となっており、論点がすり替わっていませんか？',
+                        intent: 'テーマの整合性に対する指摘。',
+                        answer: `鋭いご指摘ありがとうございます。<br>
+私たちも当初は『口腔ケアの向上』のみを目指していましたが、研究を進める中で、<strong class="highlight-rose">『土台となる業務の効率化なしに、ケアの質の向上（上積み）は不可能である』</strong>という結論に至りました。<br>
+ですので、論点のすり替えではなく、口腔ケア向上という目的を達成するための『必須条件』がDXであった、とご理解いただけますと幸いです。`
+                    },
+                    {
+                        q: 'Q12. 結局、機器導入は「失敗だった」ということですか？',
+                        intent: '研究の成否を問う厳しい質問。',
+                        answer: `<strong class="highlight-rose">『既存の業務フローにポン付けするだけでは失敗する』ということが明らかになった</strong>、という意味では、非常に価値のある失敗でした。<br>
+機器自体のポテンシャルは感じられたため、それを活かすための土壌（業務時間の創出）がないことが問題であると特定できたことは、今後の施設運営において成功への第一歩だと捉えています。`
+                    }
+                ]
+            },
+            {
+                id: 'practice',
+                title: '2. 実務・運用面',
+                subtitle: '現場オペレーション・手順',
+                description: '他施設の職員が「うちでも真似できるか？」を判断するための質問です。',
+                theme: 'sky',
+                icon: 'clipboard-list',
+                questions: [
+                    {
+                        q: 'Q4. 認知症の方への導入で、拒否反応（噛んでしまう、吐き出すなど）はありませんでしたか？',
+                        intent: '実際の使い勝手とトラブル対応への懸念。',
+                        answer: `はい、実際に対象者の選定段階で、異物感から拒否される方もいらっしゃいました。<br>
+今回は『パタカラ体操の模倣が難しい方』を優先しましたが、無理強いはせず、まずはスタッフが楽しそうに使ってみせるなどの導入を行いました。<br>
+結果として、受け入れてくださった方は振動を心地よく感じていただけたため、<strong class="highlight-sky">『誰にでも使う』のではなく『適応する方を見極める』アセスメント能力</strong>も重要だと感じました。`
+                    },
+                    {
+                        q: 'Q5. 衛生管理（感染症対策）はどのように行いましたか？ 手間になりませんか？',
+                        intent: 'オペレーション上の最大のリスク管理への質問。',
+                        answer: `今回は個人専用のマウスピースを使用し、使用後は洗浄・消毒・乾燥を徹底しました。<br>
+おっしゃる通り、この管理工数が現場の負担感に繋がりました。今後は、例えば洗浄まで自動化された機器の選定や、消毒業務をケアワーカー以外が担当する業務分担の見直しも含めて検討が必要だと感じています。`
+                    },
+                    {
+                        q: 'Q9. 評価項目の「6項目」とは具体的に何ですか？ また、なぜそれを選んだのですか？',
+                        intent: '評価指標の妥当性の確認。',
+                        answer: `はい、観察項目は<strong class="highlight-sky">『開口状態』『食事量』『むせ込み』『自力摂取』『覚醒状態』『口腔ケア自立度』の6項目</strong>です。<br>
+機器の効果だけでなく、その前後にある食事やケア全体への影響を見るために、口腔機能そのもの（開口、むせ込み）と、利用者の意欲やADL（自力摂取、覚醒、自立度）の両面から項目を選定しました。`
+                    }
+                ]
+            },
+            {
+                id: 'medical',
+                title: '3. 医学・リスク管理',
+                subtitle: '安全性・専門的視点',
+                description: '医師・看護師視点からの、リスク管理に関する専門的な質問です。',
+                theme: 'orange',
+                icon: 'activity',
+                questions: [
+                    {
+                        q: 'Q8. 振動による「唾液分泌」で、逆に誤嚥のリスクは高まりませんでしたか？',
+                        intent: '医学的な安全性への懸念。',
+                        answer: `重要なご指摘ありがとうございます。その点については<strong class="highlight-orange">『むせ込み状態』を観察項目に入れ、重点的に観察を行いました。</strong><br>
+短い期間の観察でしたが、期間内でむせ込みが明らかに増えることもなく、また振動による嘔吐や体調不良が出るということもありませんでした。<br>
+リスク管理には細心の注意を払って実施いたしました。`
+                    }
+                ]
+            },
+            {
+                id: 'management',
+                title: '4. 経営・教育・コスト',
+                subtitle: '費用対効果・人材育成',
+                description: '管理者・経営層視点からの、投資回収や教育体制に関する質問です。',
+                theme: 'purple',
+                icon: 'coins',
+                questions: [
+                    {
+                        q: 'Q10. 「g.eN」は高価だと思いますが、費用対効果（コスパ）をどう説明しますか？',
+                        intent: '投資回収のロジックについての質問。',
+                        answer: `おっしゃる通り、機器単体の価格と短期的な運用だけで見れば、費用対効果は見合わないかもしれません。<br>
+しかし、長期的な視点で見れば、誤嚥性肺炎などの全身疾患の予防につながり、何より利用者様が『自力で食事を摂り続けられる』ことは、医療・介護コストの抑制に大きく寄与します。<strong class="highlight-purple">『予防』と『自立支援』が生み出す将来的な利益は、導入費用を大きく上回る効果がある</strong>と考えております。`
+                    },
+                    {
+                        q: 'Q11. DX化と言いますが、職員のITリテラシーの差はどう埋めますか？',
+                        intent: '人材育成と運用の属人化に対する懸念。',
+                        answer: `私たちは『全職員のリテラシーを無理に引き上げる』のではなく、<strong class="highlight-purple">『リテラシーに関わらず誰でも扱える環境を作る』</strong>という方針で進めています。<br>
+具体的には、まずDXやITに関心のある職員を育てて推進役とし、彼らを中心に『どうすれば誰でも簡単に扱えるか』を検討しています。<br>
+現場が技術に合わせる努力をするのではなく、現場の誰もが直感的に使えるテクノロジーを選定・導入していくことこそが、格差を埋める最善の策だと考えています。`
+                    }
+                ]
+            },
+            {
+                id: 'future',
+                title: '5. 倫理観・未来',
+                subtitle: '意識改革・総括',
+                description: '座長による総括や、未来に向けた包括的な質問です。',
+                theme: 'emerald',
+                icon: 'lightbulb',
+                questions: [
+                    {
+                        q: 'Q6. 「取り残さない介護」とおっしゃいますが、機械化で職員との触れ合いが減る懸念はありませんか？',
+                        intent: '介護の温かみ vs テクノロジーという古典的な問い。',
+                        answer: `私たちは逆だと考えています。<br>
+振動やブラッシングという『機能的な部分』を機械に任せることで、職員は利用者様の目を見て声をかけたり、表情の変化を観察したりする<strong class="highlight-emerald">『情緒的な関わり』に集中できました。</strong><br>
+余裕がない中での手作業よりも、テクノロジーに任せることで生まれる余裕こそが、温かいケアに繋がると確信しています。`
+                    },
+                    {
+                        q: 'Q7. 今後、DX化を進めるにあたり、最もハードルが高いと感じていることは何ですか？',
+                        intent: '今後の展望と、発表者の現場感覚を問う質問。',
+                        answer: `<strong class="highlight-emerald">『今までの手法に慣れている職員の、変化に対する苦手意識の改革』と、『組織としてのコストへの理解』</strong>です。<br>
+DXは長期的に見れば大きな利益をもたらしますが、短期的には投資となり体力を消耗するものです。<br>
+この点について、なぜ今投資が必要なのかという<strong class="highlight-emerald">『現場と本部とのコミュニケーション』</strong>こそが、乗り越えるべきハードルとなっていると感じました。`
+                    },
+                    {
+                        q: 'Q13. スライドにある「波及効果」とは、具体的に他にどんな効果がありましたか？',
+                        intent: '副次的な効果についての深掘り。',
+                        answer: `最も大きな効果は、普段自分からは情報を探さないような職員にも『世の中にはこんな便利な機械があるんだ』という関心と驚きが生まれたことです。<br>
+自分の手技を磨く『スキル向上』だけでなく、<strong class="highlight-emerald">『自分のスキルの拡張機能』としてテクノロジーを取り入れる重要性に気づいてもらえました。</strong><br>
+テクノロジー導入が遅れがちなこの業界において、現場レベルでこの<strong class="highlight-emerald">『意識改革の第一歩』</strong>を踏み出せたことは、数値以上の非常に大きな意義があったと確信しています。`
+                    },
+                    {
+                        q: 'Q14. 発表者様ご自身が、一番「変わったな」と感じることは何ですか？',
+                        intent: '発表者個人の成長や想いを問う質問。',
+                        answer: `介護業界が抱える『人材不足』や『低賃金』といった課題と、それが『ケアの質』に直結してしまうという問題を解決する確実な方法が見えたことです。<br>
+具体的には、テクノロジー活用と介護予防、そして職員が負担を我慢することのない環境作りです。<br>
+介護に関わる全ての人が<strong class="highlight-emerald">『ウェルビーイング（幸福）』</strong>であれる環境を構築したいという意欲が、以前より強く高まったことが一番の変化だと感じています。`
+                    }
+                ]
+            }
+        ];
+
+        // --- テーマスタイル定義 ---
+        const themeStyles = {
+            rose: {
+                bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700',
+                accent: 'bg-rose-500', iconBg: 'bg-rose-100', lightBorder: 'border-rose-100'
+            },
+            sky: {
+                bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700',
+                accent: 'bg-sky-500', iconBg: 'bg-sky-100', lightBorder: 'border-sky-100'
+            },
+            orange: {
+                bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700',
+                accent: 'bg-orange-500', iconBg: 'bg-orange-100', lightBorder: 'border-orange-100'
+            },
+            purple: {
+                bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700',
+                accent: 'bg-purple-500', iconBg: 'bg-purple-100', lightBorder: 'border-purple-100'
+            },
+            emerald: {
+                bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700',
+                accent: 'bg-emerald-500', iconBg: 'bg-emerald-100', lightBorder: 'border-emerald-100'
+            }
+        };
+
+        // --- DOM生成 ---
+
+        // ナビゲーションを生成
+        const navContainer = document.getElementById('nav-container');
+        qaCategories.forEach(cat => {
+            const link = document.createElement('a');
+            link.href = `#${cat.id}`;
+            link.className = 'snap-start shrink-0 px-4 py-3 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors whitespace-nowrap shadow-sm active:bg-slate-100';
+            link.textContent = cat.title.split('.')[1].trim();
+            navContainer.appendChild(link);
+        });
+
+        // Q&Aセクションを生成
+        const qaContainer = document.getElementById('qa-container');
+        
+        qaCategories.forEach(cat => {
+            const styles = themeStyles[cat.theme];
+            
+            // セクションラッパー
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'mb-12 scroll-mt-24';
+            sectionDiv.id = cat.id;
+
+            // セクションヘッダー
+            const headerHtml = `
+                <div class="flex items-center gap-4 mb-6 p-4 rounded-2xl ${styles.bg} border ${styles.border}">
+                    <div class="w-14 h-14 rounded-xl ${styles.accent} flex items-center justify-center shadow-md text-white">
+                        <i data-lucide="${cat.icon}" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold ${styles.text} tracking-tight">${cat.title}</h2>
+                        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-slate-500 text-sm mt-1">
+                            <span class="font-semibold">${cat.subtitle}</span>
+                            <span class="hidden md:inline w-1 h-1 rounded-full bg-slate-300"></span>
+                            <span class="opacity-80 text-xs md:text-sm">${cat.description}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4" id="questions-${cat.id}"></div>
+            `;
+            sectionDiv.innerHTML = headerHtml;
+            qaContainer.appendChild(sectionDiv);
+
+            // 質問リスト
+            const questionsContainer = document.getElementById(`questions-${cat.id}`);
+            cat.questions.forEach((q, index) => {
+                const qItem = document.createElement('div');
+                qItem.className = 'mb-4 rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden group';
+                
+                // 質問のHTML構造
+                qItem.innerHTML = `
+                    <button class="w-full text-left p-4 md:p-5 flex items-start justify-between bg-white hover:bg-slate-50 transition-colors cursor-pointer touch-manipulation accordion-btn">
+                        <div class="flex gap-4">
+                            <div class="mt-0.5 shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-400 transition-colors duration-300 icon-wrapper">
+                                <i data-lucide="help-circle" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base md:text-lg font-bold leading-snug text-slate-600 group-hover:text-slate-800 transition-colors question-text">
+                                    ${q.q}
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-2 flex items-center gap-1 click-hint">
+                                    <span class="inline-block w-2 h-2 rounded-full bg-slate-300"></span>
+                                    クリックして回答を表示
+                                </p>
+                            </div>
+                        </div>
+                        <div class="shrink-0 ml-2 mt-2 text-slate-400 chevron-icon">
+                            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                        </div>
+                    </button>
+                    
+                    <div class="accordion-content border-t ${styles.lightBorder} ${styles.bg}">
+                        <div class="p-5 md:p-6">
+                            ${q.intent ? `
+                            <div class="mb-5 inline-flex items-start gap-2 px-3 py-2 bg-white/60 rounded-lg border border-white/50 text-slate-600 text-sm shadow-sm backdrop-blur-sm">
+                                <i data-lucide="lightbulb" class="mt-0.5 w-4 h-4 shrink-0 ${styles.text}"></i>
+                                <span><span class="font-bold opacity-80">質問の意図：</span>${q.intent}</span>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="relative bg-white rounded-xl p-5 md:p-6 border border-white/50 shadow-sm">
+                                <div class="absolute top-0 left-0 w-1.5 h-full rounded-l-xl opacity-40 ${styles.text}" style="background-color: currentColor"></div>
+                                <div class="flex gap-4">
+                                   <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${styles.iconBg} ${styles.text}">
+                                     <i data-lucide="quote" class="w-5 h-5 fill-current opacity-20"></i>
+                                   </div>
+                                   <div class="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base md:text-lg">
+                                     <p>${q.answer}</p>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                questionsContainer.appendChild(qItem);
+
+                // アコーディオンのクリックイベント設定
+                const btn = qItem.querySelector('.accordion-btn');
+                const content = qItem.querySelector('.accordion-content');
+                const chevron = qItem.querySelector('.chevron-icon');
+                const iconWrapper = qItem.querySelector('.icon-wrapper');
+                const helpIcon = iconWrapper.querySelector('i');
+                const questionText = qItem.querySelector('.question-text');
+                const clickHint = qItem.querySelector('.click-hint');
+
+                btn.addEventListener('click', () => {
+                    const isOpen = content.classList.contains('open');
+                    
+                    // トグル動作
+                    if (isOpen) {
+                        content.classList.remove('open');
+                        chevron.classList.remove('rotate-180');
+                        qItem.classList.remove('border-' + cat.theme + '-200'); // ボーダー戻す
+                        qItem.classList.add('border-slate-200');
+                        
+                        // アイコンスタイル戻す
+                        iconWrapper.classList.remove(styles.accent, 'text-white');
+                        iconWrapper.classList.add('bg-slate-100', 'text-slate-400');
+                        
+                        // テキストスタイル戻す
+                        questionText.classList.remove('text-slate-800');
+                        questionText.classList.add('text-slate-600');
+                        
+                        clickHint.style.display = 'flex';
+                    } else {
+                        content.classList.add('open');
+                        chevron.classList.add('rotate-180');
+                        qItem.classList.remove('border-slate-200');
+                        qItem.classList.add(styles.border); // テーマカラーのボーダー
+                        
+                        // アイコンスタイル適用
+                        iconWrapper.classList.remove('bg-slate-100', 'text-slate-400');
+                        iconWrapper.classList.add(styles.accent, 'text-white');
+                        
+                        // テキストスタイル適用
+                        questionText.classList.remove('text-slate-600');
+                        questionText.classList.add('text-slate-800');
+                        
+                        clickHint.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // アイコンを描画
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>
